@@ -1,7 +1,11 @@
 {
-    "name": "angular-natural-language",
-    "version": "0.1.2",
-    "main": "./build/angular-natural-language.min.js",
+    "name": "ng-natural-language",
+    "version": "0.4.0",
+    "main": [
+        "build/ng-natural-language.js",
+        "build/ng-natural-language.css",
+        "build/ng-natural-language.less",
+    ],
     "ignore": [
         "**/.*",
         "node_modules",
@@ -15,7 +19,7 @@
         "package.json"
     ],
     "dependencies": {
-        "angular": "~1.0.6"
+        "angular": "^1.6.5"
     },
     "devDependencies": {
         "angular-mocks": "*",

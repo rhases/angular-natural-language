@@ -11,8 +11,12 @@ angular.module('vr.directives.nlForm.select',[])
         return {
             restrict: 'EA',
 			replace: true,
+            require: {
+                ngModel: '^ngModel',
+                // ngOptions: '^ngOptions'
+            },
 			scope: {
-				value: '=',
+				ngModel: '=',
 				options: '='
 			},
             controller: 'nlSelectCtrl',
@@ -20,7 +24,9 @@ angular.module('vr.directives.nlForm.select',[])
 				"<div ng-form='nlSelect' class='nl-field nl-dd' ng-class=\"{'nl-field-open': opened}\">" +
 					"<a class='nl-field-toggle' ng-click='open($event)' ng-bind='getSelected()'></a>" +
 					"<ul>" +
+                        "<li ng-show='allOptions && multiple && !isAllSelected()' ng-bind='allOptions' ng-click='selectAll()'></li>" +
 						"<li ng-repeat='label in getLabels()' ng-class=\"{'nl-dd-checked': isSelected(label)}\" ng-click='select(label)' ng-bind='label'></li>" +
+                        "<li ng-show='multiple && !isNoneSelected()' ng-bind='none' ng-click='selectNone()'></li> " +
 					"</ul>" +
 				"</div>",
 			link: function(scope, element, attributes){
@@ -33,11 +39,17 @@ angular.module('vr.directives.nlForm.select',[])
 				// text for the view when multiple options are selected
 				scope.conjunction = scope.multiple && attributes.multiple != ''?attributes.multiple:'and';
 				// text for the view when no options are selected
-				scope.none = !angular.isUndefined(attributes.empty)?attributes.empty:'none';
+				scope.none = !angular.isUndefined(attributes.none)?attributes.none:'none';
+
+                // an option which is the equivalent of "select all" (multiple only)
+                scope.allOptions = !angular.isUndefined(attributes.all) ? attributes.all : false;
 
 				// convert the value to an array if this is a multi-select
-				if(scope.multiple && !angular.isArray(scope.value)) {
-					scope.value = [scope.value];
+                if(scope.multiple && angular.isUndefined(scope.ngModel)){
+                    scope.ngModel = [];
+                }
+				if(scope.multiple && !angular.isArray(scope.ngModel)) {
+					scope.ngModel = [scope.ngModel];
 				}
 
 				var overlay = false;
@@ -135,9 +147,9 @@ angular.module('vr.directives.nlForm.select',[])
 				}
 			}
 			return { value: '', label: ''};
-		};
+        }
 
-		// get the label from the given value
+        // get the label from the given value
 		function getLabel(value) {
 			var label = value;
 			switch($scope.optionType) {
@@ -163,9 +175,9 @@ angular.module('vr.directives.nlForm.select',[])
 					break;
 			}
 			return label;
-		};
+        }
 
-		// get the value given the label
+        // get the value given the label
 		function getValue(label) {
 			var value = label;
 
@@ -192,26 +204,61 @@ angular.module('vr.directives.nlForm.select',[])
 			}
 
 			return value;
-		};
+        }
 
-		// check to make sure all the values are in the list of options
+		// given an option (label, object, value, etc) retrieve its label
+		function getLabelFromOption(option) {
+			var label = option;
+
+			switch($scope.optionType) {
+				case ARRAY_OF_LABELS:
+					// the option is the value so don't do anything
+					break;
+				case OBJECT_OF_VALUES:
+					angular.forEach($scope.options,function(val, lbl) {
+						if(option == val) {
+							label = lbl;
+						}
+					});
+					break;
+				case ARRAY_OF_OBJECTS:
+					// find the option with the given label
+					angular.forEach($scope.options,function(opt) {
+						if(opt.value == option.value) {
+							label = opt.label;
+						}
+					});
+					break;
+				case OBJECT_OF_OBJECTS:
+					angular.forEach($scope.options,function(val, lbl) {
+						if(option == val) {
+							label = lbl;
+						}
+					});
+					break;
+			}
+
+			return label;
+        }
+
+        // check to make sure all the values are in the list of options
 		function checkValue() {
 			if($scope.multiple) {
 				var values = [];
-				angular.forEach($scope.value, function(value) {
+				angular.forEach($scope.ngModel, function(value) {
 					if(isOption(value)) {
 						values.push(value);
 					}
 				});
-				$scope.value = values;
+				$scope.ngModel = values;
 			} else {
-				if(!isOption($scope.value)) {
-					$scope.value = getOption(0).value;
+				if(!isOption($scope.ngModel)) {
+					$scope.ngModel = getOption(0).value;
 				}
 			}
-		};
+        }
 
-		// open the select
+        // open the select
 		$scope.open = function(event){
 			event.stopPropagation();
 			$scope.opened = true;
@@ -228,19 +275,61 @@ angular.module('vr.directives.nlForm.select',[])
 			$scope.close();
 		};
 
+        /**
+         * select all options
+         */
+        $scope.selectAll = function(){
+            angular.forEach($scope.options, function(option){
+				var label = getLabelFromOption(option);
+                if(!$scope.isSelected(label)){
+                    $scope.select(label);
+                }
+                $scope.close();
+            });
+        };
+
+        /**
+         * unselect all options
+         */
+        $scope.selectNone = function(){
+            angular.forEach($scope.options, function(option){
+				var label = getLabelFromOption(option);
+                if($scope.isSelected(label)){
+                    $scope.select(label);
+                }
+                $scope.close();
+            });
+        };
+
+        /**
+         * Returns true if all possible options have been selected; false otherwise.
+         * @returns {boolean}
+         */
+        $scope.isAllSelected = function(){
+            return !angular.isUndefined($scope.ngModel) && $scope.ngModel.length == optionsLength();
+        };
+
+        /**
+         * Returns true if no options are selected; false otherwise.
+         * @returns {boolean}
+         */
+        $scope.isNoneSelected = function(){
+            return angular.isUndefined($scope.ngModel) || $scope.ngModel.length == 0;
+        };
+
 		// set the value, or add it to the list if this is a multi-select
 		$scope.setValue = function(option) {
 			var value = getValue(option);
 			if($scope.multiple) {
-				var index = $scope.value.indexOf(value);
+				var index = $scope.ngModel.indexOf(value);
 				if(index == -1) {
-					$scope.value.push(value);
+					$scope.ngModel.push(value);
 				} else {
-					$scope.value.splice(index,1);
+					$scope.ngModel.splice(index,1);
 				}
 				if($scope.required) {
 					// at least one option must be selected
-					if($scope.value.length == 0) {
+					if($scope.ngModel.length == 0) {
 						// no options selected so it's invalid
 						$scope.nlSelect.$setValidity('required',false);
 					} else {
@@ -249,7 +338,7 @@ angular.module('vr.directives.nlForm.select',[])
 					}
 				}
 			} else {
-				$scope.value = value;
+				$scope.ngModel = value;
 			}
 		};
 
@@ -285,22 +374,28 @@ angular.module('vr.directives.nlForm.select',[])
 			if($scope.multiple) {
 				// there might be multiple selections
 				var text = '';
-				if($scope.value.length > 0) {
+				if(!angular.isUndefined($scope.ngModel) && $scope.ngModel.length > 0) {
 					// there is at least one selection
-					var comma = '';
-					var ctr = 1;
-					angular.forEach($scope.value, function(value) {
-						text += comma+getLabel(value);
-						ctr++;
-						if($scope.value.length > 2){
-							comma = ', ';
-						} else {
-							comma = ' ';
-						}
-						if(ctr == $scope.value.length) {
-							comma += $scope.conjunction+' ';
-						}
-					})
+                    if($scope.allOptions && $scope.ngModel.length == optionsLength()){
+                        //all options have been selected, and the 'all' parameter has been set
+                        text = $scope.allOptions;
+                    }
+                    else{
+                        var comma = '';
+                        var ctr = 1;
+                        angular.forEach($scope.ngModel, function(value) {
+                            text += comma+getLabel(value);
+                            ctr++;
+                            if($scope.ngModel.length > 2){
+                                comma = ', ';
+                            } else {
+                                comma = ' ';
+                            }
+                            if(ctr == $scope.ngModel.length) {
+                                comma += $scope.conjunction+' ';
+                            }
+                        })
+                    }
 				} else {
 					// no selections
 					text = $scope.none;
@@ -308,16 +403,19 @@ angular.module('vr.directives.nlForm.select',[])
 				return text;
 			} else {
 				// only one selection possible
-				return getLabel($scope.value);
+				return getLabel($scope.ngModel);
 			}
 		};
 
 		// check if the option is selected
 		$scope.isSelected = function(option) {
+            if(angular.isUndefined($scope.ngModel)){
+                return false;
+            }
 			if($scope.multiple) {
-				return $scope.value.indexOf(getValue(option)) > -1;
+				return $scope.ngModel.indexOf(getValue(option)) > -1;
 			} else {
-				return $scope.value == getValue(option);
+				return $scope.ngModel == getValue(option);
 			}
 		};
 
@@ -367,7 +465,7 @@ angular.module('vr.directives.nlForm.text',[])
 				placeholder: '@',
 				subline: '@',
 				name: '@',
-				value: '='
+				ngModel: '='
 			},
             template:
                 '<div ng-form class="nl-field nl-ti-text" ng-class="{\'nl-field-open\': opened}">' +
@@ -422,10 +520,10 @@ angular.module('vr.directives.nlForm.text',[])
 
 		// if there is no value, show the placeholder instead
 		$scope.viewValue = function(){
-			if($scope.value == ''){
+			if($scope.ngModel == ''){
 				return $scope.placeholder;
 			}
-			return $scope.value;
+			return $scope.ngModel;
 		};
 
 		// do we have a subline? ok, then show it!

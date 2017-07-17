@@ -7,7 +7,7 @@ angular.module('vr.directives.nlForm.text',[])
 				placeholder: '@',
 				subline: '@',
 				name: '@',
-				value: '='
+				ngModel: '='
 			},
             template:
                 '<div ng-form class="nl-field nl-ti-text" ng-class="{\'nl-field-open\': opened}">' +
@@ -62,10 +62,10 @@ angular.module('vr.directives.nlForm.text',[])
 
 		// if there is no value, show the placeholder instead
 		$scope.viewValue = function(){
-			if($scope.value == ''){
+			if($scope.ngModel == ''){
 				return $scope.placeholder;
 			}
-			return $scope.value;
+			return $scope.ngModel;
 		};
 
 		// do we have a subline? ok, then show it!

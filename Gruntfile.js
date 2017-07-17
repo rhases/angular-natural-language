@@ -2,13 +2,24 @@ module.exports = function(grunt){
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        srcFiles: [
-            'src/*.js'
-        ],
+        jsSrcFiles: [ 'src/*.js' ],
+        lessSrcFiles: [ 'src/*.less' ],
         concat: {
             prod: {
-                src: ['<%= srcFiles %>'],
+                src: ['<%= jsSrcFiles %>'],
                 dest: 'build/<%= pkg.name %>.js'
+            }
+        },
+        copy: {
+            prod: {
+                src: ['<%= lessSrcFiles %>'],
+                dest: 'build/<%= pkg.name %>.less'
+            }
+        },
+        less: {
+            prod: {
+                src: ['<%= lessSrcFiles %>'],
+                dest: 'build/<%= pkg.name %>.css'
             }
         },
         uglify: {
@@ -22,12 +33,12 @@ module.exports = function(grunt){
         }
     });
 
-    // Load the plugin that provides the "uglify" task.
-    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-uglify'); // Load the plugin that provides the "uglify" task.
+    grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.loadNpmTasks('grunt-contrib-less');
+    grunt.loadNpmTasks('grunt-contrib-copy');
 
     // Default task(s).
-    grunt.registerTask('default', ['uglify', 'concat:prod']);
-
-    grunt.loadNpmTasks('grunt-contrib-concat');
+    grunt.registerTask('default', ['less:prod', 'copy:prod', 'concat:prod']);
 
 };
