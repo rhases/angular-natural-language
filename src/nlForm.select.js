@@ -1,4 +1,4 @@
-angular.module('vr.directives.nlForm.select',[])
+angular.module('rhases.directives.nlForm.select',[])
     .directive('nlSelect', function(){
         return {
             restrict: 'EA',
@@ -14,7 +14,7 @@ angular.module('vr.directives.nlForm.select',[])
             controller: 'nlSelectCtrl',
 			template:
 				"<div ng-form='nlSelect' class='nl-field nl-dd' ng-class=\"{'nl-field-open': opened}\">" +
-					"<a class='nl-field-toggle' ng-click='open($event)' ng-bind='getSelected()'></a>" +
+					"<a class='nl-field-toggle' ng-click='open($event)' ng-bind='getSelected()'>xxx</a>" +
 					"<ul>" +
                         "<li ng-show='allOptions && multiple && !isAllSelected()' ng-bind='allOptions' ng-click='selectAll()'></li>" +
 						"<li ng-repeat='label in getLabels()' ng-class=\"{'nl-dd-checked': isSelected(label)}\" ng-click='select(label)' ng-bind='label'></li>" +
@@ -77,7 +77,7 @@ angular.module('vr.directives.nlForm.select',[])
 		// is the value in the list of options
 		function isOption(value) {
 			var found = false;
-			angular.forEach($scope.options,function(opt) {
+			angular.forEach($scope.ngOptions,function(opt) {
 				switch($scope.optionType) {
 					case ARRAY_OF_LABELS:
 					case OBJECT_OF_VALUES:
@@ -100,11 +100,11 @@ angular.module('vr.directives.nlForm.select',[])
 			switch($scope.optionType) {
 				case ARRAY_OF_LABELS:
 				case ARRAY_OF_OBJECTS:
-					return $scope.options.length;
+					return $scope.ngOptions.length;
 				case OBJECT_OF_OBJECTS:
 				case OBJECT_OF_VALUES:
 					var ctr = 0;
-					angular.forEach($scope.options, function() { ctr++; });
+					angular.forEach($scope.ngOptions, function() { ctr++; });
 					return ctr;
 			}
 			return 0;
@@ -116,16 +116,16 @@ angular.module('vr.directives.nlForm.select',[])
 				switch($scope.optionType) {
 					case ARRAY_OF_LABELS:
 						// the label and value are the same
-						return { value: $scope.options[0], label: $scope.options[0] };
+						return { value: $scope.ngOptions[0], label: $scope.ngOptions[0] };
 					case ARRAY_OF_OBJECTS:
 						// already normalized
-						return $scope.options[0];
+						return $scope.ngOptions[0];
 					case OBJECT_OF_VALUES:
 					case OBJECT_OF_OBJECTS:
 						// iterate through the options to find the index
 						var option = null;
 						var ctr = 0;
-						angular.forEach($scope.options,function(value, label) {
+						angular.forEach($scope.ngOptions,function(value, label) {
 							if(ctr == index) {
 								if($scope.optionType == OBJECT_OF_VALUES) {
 									option = { value: value, label: label };
@@ -148,7 +148,7 @@ angular.module('vr.directives.nlForm.select',[])
 				case ARRAY_OF_OBJECTS:
 				case OBJECT_OF_OBJECTS:
 					// find the option with the given value and get its value
-					angular.forEach($scope.options, function(opt) {
+					angular.forEach($scope.ngOptions, function(opt) {
 						if(opt.value == value) {
 							label = opt.label;
 						}
@@ -159,7 +159,7 @@ angular.module('vr.directives.nlForm.select',[])
 					break;
 				case OBJECT_OF_VALUES:
 					// find the option with the given value and get the index (the label)
-					angular.forEach($scope.options, function(opt, index) {
+					angular.forEach($scope.ngOptions, function(opt, index) {
 						if(value == opt) {
 							label = index;
 						}
@@ -179,7 +179,7 @@ angular.module('vr.directives.nlForm.select',[])
 					break;
 				case ARRAY_OF_OBJECTS:
 					// find the option with the given label and get its value
-					angular.forEach($scope.options,function(opt) {
+					angular.forEach($scope.ngOptions,function(opt) {
 						if(opt.label == label) {
 							value = opt.value;
 						}
@@ -187,11 +187,11 @@ angular.module('vr.directives.nlForm.select',[])
 					break;
 				case OBJECT_OF_VALUES:
 					// simple index retrieval
-					value = $scope.options[label];
+					value = $scope.ngOptions[label];
 					break;
 				case OBJECT_OF_OBJECTS:
 					// simple index retrieval
-					value = $scope.options[label].value;
+					value = $scope.ngOptions[label].value;
 					break;
 			}
 
@@ -207,7 +207,7 @@ angular.module('vr.directives.nlForm.select',[])
 					// the option is the value so don't do anything
 					break;
 				case OBJECT_OF_VALUES:
-					angular.forEach($scope.options,function(val, lbl) {
+					angular.forEach($scope.ngOptions,function(val, lbl) {
 						if(option == val) {
 							label = lbl;
 						}
@@ -215,14 +215,14 @@ angular.module('vr.directives.nlForm.select',[])
 					break;
 				case ARRAY_OF_OBJECTS:
 					// find the option with the given label
-					angular.forEach($scope.options,function(opt) {
+					angular.forEach($scope.ngOptions,function(opt) {
 						if(opt.value == option.value) {
 							label = opt.label;
 						}
 					});
 					break;
 				case OBJECT_OF_OBJECTS:
-					angular.forEach($scope.options,function(val, lbl) {
+					angular.forEach($scope.ngOptions,function(val, lbl) {
 						if(option == val) {
 							label = lbl;
 						}
@@ -271,7 +271,7 @@ angular.module('vr.directives.nlForm.select',[])
          * select all options
          */
         $scope.selectAll = function(){
-            angular.forEach($scope.options, function(option){
+            angular.forEach($scope.ngOptions, function(option){
 				var label = getLabelFromOption(option);
                 if(!$scope.isSelected(label)){
                     $scope.select(label);
@@ -284,7 +284,7 @@ angular.module('vr.directives.nlForm.select',[])
          * unselect all options
          */
         $scope.selectNone = function(){
-            angular.forEach($scope.options, function(option){
+            angular.forEach($scope.ngOptions, function(option){
 				var label = getLabelFromOption(option);
                 if($scope.isSelected(label)){
                     $scope.select(label);
@@ -339,17 +339,17 @@ angular.module('vr.directives.nlForm.select',[])
 			switch($scope.optionType) {
 				case ARRAY_OF_LABELS:
 					// don't need to do anything
-					return $scope.options;
+					return $scope.ngOptions;
 				case ARRAY_OF_OBJECTS:
 					// map the array to pull out the label
-					return $scope.options.map(function(opt) {
+					return $scope.ngOptions.map(function(opt) {
 						return opt.label;
 					});
 				case OBJECT_OF_VALUES:
 				case OBJECT_OF_OBJECTS:
 					// iterate through the options to get the labels
 					var options = [];
-					angular.forEach($scope.options,function(value, label) {
+					angular.forEach($scope.ngOptions,function(value, label) {
 						if($scope.optionType == OBJECT_OF_VALUES) {
 							options.push(label);
 						} else {
@@ -412,24 +412,24 @@ angular.module('vr.directives.nlForm.select',[])
 		};
 
 		// make sure we update the options internally if they change externally
-		$scope.$watch('options',function() {
+		$scope.$watch('ngOptions',function() {
 
 			// reset option list type
 			$scope.optionType = null;
-			if(angular.isArray($scope.options)) {
+			if(angular.isArray($scope.ngOptions)) {
 				// option list is an array
-				if(angular.isObject($scope.options[0])) {
+				if(angular.isObject($scope.ngOptions[0])) {
 					// of objects
 					$scope.optionType = ARRAY_OF_OBJECTS;
 				} else {
 					// of labels
 					$scope.optionType = ARRAY_OF_LABELS;
 				}
-			} else if(angular.isObject($scope.options)) {
+			} else if(angular.isObject($scope.ngOptions)) {
 				// option list is an object
-				for(var key in $scope.options) {
-					if($scope.options.hasOwnProperty(key)) {
-						if(angular.isObject($scope.options[key])) {
+				for(var key in $scope.ngOptions) {
+					if($scope.ngOptions.hasOwnProperty(key)) {
+						if(angular.isObject($scope.ngOptions[key])) {
 							// of objects
 							$scope.optionType = OBJECT_OF_OBJECTS;
 						} else {
