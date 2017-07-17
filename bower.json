@@ -4,7 +4,7 @@
     "main": [
         "build/ng-natural-language.js",
         "build/ng-natural-language.css",
-        "build/ng-natural-language.less",
+        "build/ng-natural-language.less"
     ],
     "ignore": [
         "**/.*",
